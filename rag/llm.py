@@ -69,7 +69,7 @@ def get_database():
 def get_retriever():
     """Retriever를 준비한다."""
     database = get_database()
-    return database.as_retriever(search_kwargs={"k": 1})
+    return database.as_retriever(search_kwargs={"k": 3})
 
 
 def get_ai_response(user_message):
@@ -77,6 +77,7 @@ def get_ai_response(user_message):
     bundle = get_dictionary_bundle() # bundle 가져오기
     query = normalize_query(user_message, bundle) # 신규 질문 작성
 
+    print(query)
 
     retriever = get_retriever()
 
@@ -85,5 +86,6 @@ def get_ai_response(user_message):
     rag_chain = create_retrieval_chain(retriever, combine_docs_chain)
 
     response = rag_chain.invoke({"input": query})
+
 
     return response["answer"]

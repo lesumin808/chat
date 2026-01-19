@@ -45,12 +45,12 @@ def normalize_query(text: str, bundle: dict) -> str:
         if token.lower() in t:
             return t
 
-    for k,v in bundle["normalization"].get("replace", {}).item():  #replace키가 있으면 가져오고 아니면 {} 빈값 가져오기
+    for k,v in bundle["normalization"].get("replace", {}).items():  #replace키가 있으면 가져오고 아니면 {} 빈값 가져오기
         t = t.replace(k.lower(), v.lower()) #k는 원래 표현, v는 바꿀 결과
 
     # 동의어 매핑 -> 표준키 확장 ( ex. 동의어가 질문에 계속 추가되는 형태 ) 
     expansions = [] # 확장하고자 하는 키워드 + 
-    for canonical, variants in bundle["synonyms"].item():
+    for canonical, variants in bundle["synonyms"].items():
         for v in variants:
             if v.lower() in t:
                 expansions.append(canonical)
@@ -59,7 +59,7 @@ def normalize_query(text: str, bundle: dict) -> str:
     # 일반 딕셔너리 일때는 k,v 도메인적 의미가 있을 경우 canonical 같은 의미가 있는 변수를 사용
     # 사용자 질문안에 에러가 메시지가 있으면 에러를 대표하는 => 표준 검색어를 자동으로 추가    
     extracted = []
-    for name, cfg in bundle.error_patterns.items(): #name은 지금은 안쓰지만 의미용 변수 or 운영시 로그 확인용 작성해둠
+    for name, cfg in bundle["error_patterns"].items(): #name은 지금은 안쓰지만 의미용 변수 or 운영시 로그 확인용 작성해둠
         for p in cfg.get("patterns", []):
             if p.lower() in t:
                 canon = cfg.get("canonical_query", [])
