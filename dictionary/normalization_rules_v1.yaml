@@ -1,0 +1,26 @@
+version: "v1"
+updated: "2026-01-15"
+
+normalization_rules:
+  lowercase: true
+
+  replace:
+    # 흔한 오타/표기
+    "데이타소스": "데이터소스"
+    "데이터 소스": "데이터소스"
+    "데소": "datasource"
+    "아핌": "apim"
+    "포털": "dev_portal"
+    "컨피그": "config"
+    "콘피그": "config"
+    "임포트": "import"
+    "익스포트": "export"
+
+  preserve_tokens:
+    # 에러 문자열은 그대로 보존(중요)
+    - "command not found"
+    - "java: command not found"
+    - "permission denied"
+    - "connection refused"
+    - "SSLHandshakeException"
+    - "ORA-"

@@ -1,0 +1,85 @@
+version: "v1"
+updated: "2026-01-15"
+
+error_patterns:
+  # OS/명령어 계열
+  command_not_found:
+    patterns:
+      - "command not found"
+      - ": command not found"
+      - "not found"
+      - "명령어 없음"
+      - "명령어를 찾을 수"
+      - "커맨드 못찾"
+    hints:
+      - "PATH/JAVA_HOME 환경변수"
+      - "패키지 설치 여부"
+      - "which/whereis 확인"
+
+  java_command_not_found:
+    patterns:
+      - "java: command not found"
+      - "java command not found"
+      - "java를 찾을 수"
+      - "자바 실행 안됨"
+      - "자바 커맨드"
+    canonical_query:
+      - "java: command not found 원인 해결 PATH JAVA_HOME"
+    tags:
+      - "linux"
+      - "java"
+      - "install"
+
+  permission_denied:
+    patterns:
+      - "permission denied"
+      - "접근이 거부"
+      - "권한 없음"
+    hints:
+      - "sudo 권한"
+      - "파일 권한(chmod/chown)"
+      - "실행 권한(+x)"
+
+  port_in_use:
+    patterns:
+      - "address already in use"
+      - "port is already allocated"
+      - "bind: address already in use"
+      - "포트가 사용 중"
+    hints:
+      - "lsof -i :<port>"
+      - "netstat/ss 확인"
+      - "프로세스 종료/포트 변경"
+
+  connection_refused:
+    patterns:
+      - "connection refused"
+      - "ECONNREFUSED"
+      - "연결 거부"
+    hints:
+      - "리스너/서비스 기동 여부"
+      - "방화벽/보안그룹"
+      - "host/port 확인"
+
+  handshake_failed:
+    patterns:
+      - "handshake_failure"
+      - "SSLHandshakeException"
+      - "unable to find valid certification path"
+      - "PKIX path building failed"
+    hints:
+      - "인증서 체인/CA"
+      - "truststore/keystore"
+      - "CN/SAN 도메인"
+
+  datasource_error:
+    patterns:
+      - "could not obtain connection"
+      - "pool exhausted"
+      - "timeout waiting for idle object"
+      - "ORA-"
+      - "SQLSTATE"
+    hints:
+      - "DataSource 설정"
+      - "JDBC URL"
+      - "커넥션풀 max/idle/timeout"

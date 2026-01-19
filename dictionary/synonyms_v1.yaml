@@ -1,0 +1,234 @@
+version: "v1"
+lang: "ko"
+updated: "2026-01-15"
+notes:
+  - "표준 키는 검색/문서 용어(영문, kebab/snake 혼용 가능)로 유지"
+  - "values는 사용자 표현(한글/줄임말/오타 포함)"
+
+synonyms:
+  # === 공통/문서 구조 ===
+  install:
+    - 설치
+    - 셋업
+    - 세팅
+    - 구성
+    - 설치환경
+    - 설치 환경
+  setting:
+    - 설정
+    - 환경설정
+    - 환경 설정
+    - config
+    - configuration
+    - 콘피그
+    - 컨피그
+  appendix:
+    - 부록
+    - 별첨
+    - 첨부
+    - 참고
+    - 참고자료
+
+  # === 리스너/통신 ===
+  listener:
+    - 리스너
+    - 리슨
+    - 수신
+    - 수신기
+    - listener
+  interface:
+    - 인터페이스
+    - 연계
+    - 연동
+    - 통신
+    - api 연계
+    - api 연동
+    - integration
+  endpoint:
+    - 엔드포인트
+    - endpoint
+    - url
+    - 호출주소
+    - 호출 주소
+  port:
+    - 포트
+    - port
+    - 포트번호
+    - 포트 번호
+  firewall:
+    - 방화벽
+    - firewall
+    - 포트 오픈
+    - 포트open
+    - 인바운드
+    - 아웃바운드
+
+  # === DataSource/DB ===
+  datasource:
+    - datasource
+    - 데이터소스
+    - 데이터 소스
+    - ds
+    - 데소
+    - 디에스
+    - db연결
+    - db 연결
+    - 디비연결
+    - 디비 연결
+    - 커넥션
+    - connection
+  jdbc:
+    - jdbc
+    - jdbc드라이버
+    - jdbc 드라이버
+    - 드라이버
+  connection_pool:
+    - 커넥션풀
+    - 커넥션 풀
+    - 풀
+    - pool
+    - connection pool
+
+  # === Import/Export ===
+  import:
+    - import
+    - 임포트
+    - 가져오기
+    - 불러오기
+    - 로드
+    - 로딩
+    - 적재
+  export:
+    - export
+    - 익스포트
+    - 내보내기
+    - 추출
+    - 덤프
+    - backup
+    - 백업
+
+  # === 테스트/검증 ===
+  test:
+    - 테스트
+    - 검증
+    - 점검
+    - 확인
+    - 시험
+  unit_test:
+    - 단위테스트
+    - 단위 테스트
+    - 유닛테스트
+    - unit test
+  integration_test:
+    - 통합테스트
+    - 통합 테스트
+    - 연동테스트
+    - 연동 테스트
+    - integration test
+
+  # === 모니터링/로그 ===
+  monitoring:
+    - 모니터링
+    - 관제
+    - 감시
+    - monitoring
+  log:
+    - 로그
+    - log
+    - 로깅
+    - logging
+    - 로그파일
+    - 로그 파일
+  metric:
+    - 메트릭
+    - 지표
+    - metric
+    - prometheus
+    - grafana
+  alert:
+    - 알람
+    - 경보
+    - alert
+    - 알림
+
+  # === 인증서/보안 ===
+  certificate:
+    - 인증서
+    - cert
+    - certificate
+    - ssl
+    - tls
+    - x509
+  keystore:
+    - keystore
+    - 키스토어
+    - 키 스토어
+    - jks
+    - pkcs12
+    - p12
+  truststore:
+    - truststore
+    - 트러스트스토어
+    - 트러스트 스토어
+  apikey:
+    - api키
+    - api 키
+    - key
+    - 토큰
+    - token
+    - credential
+    - 크레덴셜
+
+  # === 표준화/설계 ===
+  standard:
+    - 표준
+    - 표준화
+    - 규칙
+    - convention
+    - 컨벤션
+    - 가이드
+  custom:
+    - 커스텀
+    - 커스터마이징
+    - 확장
+    - 플러그인
+    - plugin
+    - extension
+  pattern:
+    - 패턴
+    - best practice
+    - 베스트프랙티스
+    - 사례
+    - 예시
+
+  # === 드라이버/클라이언트 ===
+  driver:
+    - 드라이버
+    - driver
+    - jdbc드라이버
+    - jdbc 드라이버
+  windows:
+    - 윈도우
+    - windows
+    - win
+  linux:
+    - 리눅스
+    - linux
+    - 유닉스
+    - unix
+
+  # === 개발자 포털/APIM ===
+  dev_portal:
+    - 개발자포털
+    - 개발자 포털
+    - dev portal
+    - portal
+    - 포털
+  apim:
+    - apim
+    - 아핌
+    - api manager
+    - api 관리
+    - api관리
+    - 게이트웨이
+    - gateway
