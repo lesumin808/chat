@@ -21,10 +21,10 @@ def load_yaml(name: str) -> dict: #str 스트링 dict 딕셔너리 => 개발자�
 #yaml 파일 load 한번만 캐싱 후 적재한다. 반환씨 dict 파일 key value로 반환
 @lru_cache(maxsize=1)
 def get_dictionary_bundle():
-    synonyms = load_yaml("synonyms_v1.yaml")["synonyms"]
-    error_patterns = load_yaml("error_patterns_v1.yaml")["error_patterns"]
-    intents = load_yaml("intents_v1.yaml")["intents"]
-    normalization = load_yaml("normalization_rules_v1.yaml")["normalization_rules"]
+    synonyms = load_yaml("synonyms.yaml")["synonyms"]
+    error_patterns = load_yaml("error_patterns.yaml")["error_patterns"]
+    intents = load_yaml("intents.yaml")["intents"]
+    normalization = load_yaml("normalization_rules.yaml")["normalization_rules"]
 
     return {
         "synonyms" : synonyms,
@@ -34,8 +34,8 @@ def get_dictionary_bundle():
     }
 
 #딕셔너리를 가져와 사용자의 query(질문)을 변환 
-def normalize_query(text: str) -> str:
-    bundle = get_dictionary_bundle() # 모든 규칙을 불러옴
+def normalize_query(text: str, bundle: dict) -> str:
+    #bundle = get_dictionary_bundle() # 모든 규칙을 불러옴
     t = text.strip().lower() # 기본 정규화
 
     preserve_tokens = bundle["normalization"].get("preserve_tokens", [])
@@ -45,5 +45,30 @@ def normalize_query(text: str) -> str:
         if token.lower() in t:
             return t
 
-    for k,v in bundle["normalization"].get("replace", {}).item  #replace키가 있으면 가져오고 아니면 {} 빈값 가져오기
+    for k,v in bundle["normalization"].get("replace", {}).item():  #replace키가 있으면 가져오고 아니면 {} 빈값 가져오기
         t = t.replace(k.lower(), v.lower()) #k는 원래 표현, v는 바꿀 결과
+
+    # 동의어 매핑 -> 표준키 확장 ( ex. 동의어가 질문에 계속 추가되는 형태 ) 
+    expansions = [] # 확장하고자 하는 키워드 + 
+    for canonical, variants in bundle["synonyms"].item():
+        for v in variants:
+            if v.lower() in t:
+                expansions.append(canonical)
+                break
+
+    # 일반 딕셔너리 일때는 k,v 도메인적 의미가 있을 경우 canonical 같은 의미가 있는 변수를 사용
+    # 사용자 질문안에 에러가 메시지가 있으면 에러를 대표하는 => 표준 검색어를 자동으로 추가    
+    extracted = []
+    for name, cfg in bundle.error_patterns.items(): #name은 지금은 안쓰지만 의미용 변수 or 운영시 로그 확인용 작성해둠
+        for p in cfg.get("patterns", []):
+            if p.lower() in t:
+                canon = cfg.get("canonical_query", [])
+                extracted.extend(canon if canon else [p]) #extend는 리스트로 받아서 배열에 담아 넣어주기
+                break
+
+    # 최종 검색어 생성
+    final_query = "".join([t] + extracted + expansions) # 문자열 조립 함수
+
+    return final_query
+
+    
