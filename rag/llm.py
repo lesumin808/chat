@@ -18,7 +18,7 @@ from langchain_openai import ChatOpenAI
 from utills.dictionary import get_dictionary_bundle
 from utills.dictionary import normalize_query
 from utills.deictic import has_deictic_expression
-
+#from langchain_ollama import ChatOllama
 from functools import lru_cache 
 
 def get_document_list() -> TextLoader:
@@ -38,7 +38,8 @@ def get_document_list() -> TextLoader:
 def get_llm(model='gpt-4.1-mini'):
     """LLM 모델을 가져온다."""
     #llm = ChatOllama(model="llama3.2:latest", base_url="http://127.0.0.1:11434")
-    return ChatOpenAI(model=model, temperature=0.2)
+    llm = ChatOpenAI(model=model, temperature=0.2)
+    return llm
 
 
 @lru_cache(maxsize=4)
