@@ -28,4 +28,10 @@ def get_deictic_regex():
    # key, value를 빠르게 분석할때는 re 정규식객체로 변환한 것이 옳다. (검색 엔진 객체)
 
 
+DEICTIC_REGEX = get_deictic_regex() # 정규식 객체 : 아까|그거 (전역 변수로 한번만 호출)
+
+def has_deictic_expression(query: str) -> bool:
+    """query에 지시어(deictic)가 포함되어 있는지 반환한다."""
+    # search => 문자열 전체에서 탐색 
+    return bool(DEICTIC_REGEX.search(query)) # true, false
 
