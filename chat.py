@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 
 from rag.llm import get_ai_response
 
-st.set_page_config(page_title="testbot", page_icon="🍊")
+st.set_page_config(page_title="사업수행팀 교육문서", page_icon="🍊")
 
-st.title("test chat")
-st.caption("answer")
+st.title("교육문서")
+st.caption("사업수행팀 교육문서")
 
 # 환경변수를 불러줌
 load_dotenv()
