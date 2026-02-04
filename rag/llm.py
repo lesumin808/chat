@@ -1,32 +1,26 @@
-from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from langchain_community.document_loaders import TextLoader
+from langchain_community.chat_message_histories import ChatMessageHistory
 
 from langchain_core.runnables import RunnableMap, RunnableLambda
 from langchain_core.documents import Document
-from operator import itemgetter
-
-
 from langchain_core.output_parsers import StrOutputParser
-
-
-from typing import Dict, List
-
 from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate, MessagesPlaceholder
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
-
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from langchain_openai import ChatOpenAI
+from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import ChatOllama
+
+from operator import itemgetter
+from typing import Dict, List
+from functools import lru_cache 
 
 from utills.dictionary import get_dictionary_bundle, normalize_query
 from utills.deictic import has_deictic_expression
-from langchain_ollama import ChatOllama
-from functools import lru_cache 
 
-import os
 
 def get_document_list() -> RecursiveCharacterTextSplitter:
     """마크다운/텍스트 문서를 쪼개서 Document 리스트로 만든다."""
@@ -35,29 +29,31 @@ def get_document_list() -> RecursiveCharacterTextSplitter:
         chunk_overlap=200
     )
 
-    #TextLoader → Document → Chroma → Retriever → RAG → Agent
+    #TextLoader → Document → Chroma → Retriever → RAG → Chain
     #document로 관리해야 용이
     loader = TextLoader("./edu_markdown.txt", encoding="utf-8")
-    docs = loader.load() # txt To document
-    
+    docs = loader.load() # str To document
     return text_splitter.split_documents(docs)
 
 
 def _format_docs(docs:List[Document]) -> str:
+    """
+    여러 Document 객체의 page_content를
+    두 줄 개행("\n\n") 으로 연결하여 하나의 문자열로 반환한다.    
+    """
     return "\n\n".join(d.page_content for d in docs)
 
-@lru_cache(maxsize=4)
-def get_llm(model='gpt-4.1-mini'):
-    """LLM 모델을 가져온다.
-    NOTE:
+@lru_cache(maxsize=1)
+def get_llm(model='exaone3.5:2.4b'):
+    """LLM 모델을 가져온다. (ollma로 로컬 llm 실행 / LG모델 사용, 한국어에 특화 (1.6 GB))
     """
+    #llm = ChatOpenAI(model=model, temperature=0.2) : GPT 사용시
+    llm = ChatOllama(
+        model=model, 
+        base_url="http://127.0.0.1:11434",
+        temperature=0
+        )
 
-    print("OPENAI_API_KEY set?", bool(os.getenv("OPENAI_API_KEY")))
-    print("OPENAI_ORG_ID:", os.getenv("OPENAI_ORG_ID"))
-    print("OPENAI_PROJECT_ID:", os.getenv("OPENAI_PROJECT_ID"))
-
-    llm = ChatOllama(model="llama3.2:latest", base_url="http://127.0.0.1:11434")
-    #llm = ChatOpenAI(model=model, temperature=0.2)
     return llm
 
 
@@ -103,7 +99,7 @@ def load_db():
 # Build retriever (HF Embeddings + Chroma)
 # ----------------------------
 def get_retriever():  # 
-    """load 된 db를 가지고 retriver을 생성한다."""
+    """load된 db를 가지고 retriver을 생성한다."""
     vectorstore = load_db()
     return vectorstore.as_retriever(search_kwargs={"k":3})
 
@@ -125,23 +121,47 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 # 기본 답변 프롬프트 생성 
 # ----------------------------
 @lru_cache(maxsize=1)
-def get_answer_prompt() -> ChatPromptTemplate:
-    """
-    기본 답변 프롬프트를 생성한다.
-    """
-    answer_pormpt = ChatPromptTemplate.from_messages(
-        [
-           (
-                "system",
-                "You are a helpful assistant. Answer using ONLY the provided context. "
-                "If the context is insufficient, say you don't know.",
-            ),
-            MessagesPlaceholder("chat_history"),
-            ("human", "Question: {question}\n\nContext:\n{context}"),
-        ]
-    )
+def get_answer_prompt():
+    return ChatPromptTemplate.from_messages([
 
-    return answer_pormpt
+        ("system",
+        """
+            추가 규칙:
+            - 답변은 반드시 아래 형식만 사용한다.
+            - 형식 밖의 문장은 절대 출력하지 않는다.
+            - Context에 없는 내용(상식/추론/추가 설명/예시/주의사항)은 금지.
+            - 답변 섹션의 모든 문장은 "근거 인용" 섹션에서 직접 뒷받침되어야 한다.
+            - 답변은 한국어를 사용하여 출력한다.
+            - 근거 인용이 불가능하면 아래 문장만 출력한다: "해당 질문은 제공된 문서 범위에 포함되지 않습니다.
+            문서 관련 질문을 입력해 주세요"
+            - [답변] 
+
+            - [근거 인용]
+            - (1~3문장 이내로 간단히 작성)
+            - 각 인용문은 반드시 한 줄에 하나씩 출력한다.
+            - 각 인용문 사이에는 줄바꿈(\\n)을 넣는다.
+            - 한 줄에 두 개 이상의 인용문을 작성하지 않는다.
+            - "Context에서 그대로 복사한 문장" 형태로 작성한다.,
+
+            추가 규칙:
+            - 질문이 Context와 무관하거나 정보 제공 범위를 벗어나면,
+            아래 문장만 출력한다:
+
+            "해당 질문은 제공된 문서 범위에 포함되지 않습니다.
+            문서 관련 질문을 입력해 주세요."
+
+                    ("human",
+                  
+            Question:
+            {question}
+
+            Context:
+            {context}
+
+            Answer (with quotes from Context):
+                    """.strip()
+                    )
+    ])
 
 # ----------------------------
 # history 답변 프롬프트 생성
@@ -183,6 +203,8 @@ def get_init_rag_chain():
     retriever = get_retriever()
     llm = get_llm()
 
+    print("retriever :",retriever)
+
     answer_prompt = get_answer_prompt()
     parser = StrOutputParser() # ai_msg TO text
 
@@ -196,6 +218,8 @@ def get_init_rag_chain():
 
     }
 
+    print("pre contents:", retriever.invoke("메가웨어 설치 순서 알려줘"))
+    
     to_prompt_vars = {
         "question": itemgetter("question"),
         "chat_history": itemgetter("chat_history"),
