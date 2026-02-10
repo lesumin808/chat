@@ -22,6 +22,9 @@ from utills.dictionary import get_dictionary_bundle, normalize_query
 from utills.deictic import has_deictic_expression
 
 
+# ----------------------------
+# markdown TO chunk_document - Chunk 분할
+# ----------------------------
 def get_document_list() -> RecursiveCharacterTextSplitter:
     """마크다운/텍스트 문서를 쪼개서 Document 리스트로 만든다."""
     text_splitter = RecursiveCharacterTextSplitter(
@@ -36,13 +39,20 @@ def get_document_list() -> RecursiveCharacterTextSplitter:
     return text_splitter.split_documents(docs)
 
 
+# ----------------------------
+# markdown TO chunk_document
+# ----------------------------
 def _format_docs(docs:List[Document]) -> str:
     """
-    여러 Document 객체의 page_content를
-    두 줄 개행("\n\n") 으로 연결하여 하나의 문자열로 반환한다.    
+    여러 Document 객체의 page_content(str)를
+    두 줄 개행("\n\n") 으로 연결하여 하나의 문자열(str)로 반환한다.    
     """
     return "\n\n".join(d.page_content for d in docs)
 
+
+# ----------------------------
+# llm을 생성한다.
+# ----------------------------
 @lru_cache(maxsize=1)
 def get_llm(model='exaone3.5:2.4b'):
     """LLM 모델을 가져온다. (ollma로 로컬 llm 실행 / LG모델 사용, 한국어에 특화 (1.6 GB))
@@ -51,20 +61,23 @@ def get_llm(model='exaone3.5:2.4b'):
     llm = ChatOllama(
         model=model, 
         base_url="http://127.0.0.1:11434",
-        temperature=0
+        temperature=0.0 # 답변의 확률분포가 제일 높은 것을 선택한다.
         )
 
     return llm
 
 
-@lru_cache(maxsize=4)
+# ----------------------------
+# HF Embeddings 모델 생성
+# ----------------------------
+@lru_cache(maxsize=1)
 def get_embeddings(model='intfloat/multilingual-e5-large-instruct') -> HuggingFaceEmbeddings:
     """임베딩 모델을 가져온다."""
     return HuggingFaceEmbeddings(model_name=model)
 
 
 # ----------------------------
-# Vector DB (Ingest vs Load)
+# Vector DB 생성
 # ----------------------------
 @lru_cache(maxsize=1)
 def build_database():
@@ -82,6 +95,9 @@ def build_database():
 
     return database
 
+# ----------------------------
+# Vector DB load
+# ----------------------------
 @lru_cache(maxsize=1)
 def load_db():
     """
@@ -103,13 +119,15 @@ def get_retriever():  #
     vectorstore = load_db()
     return vectorstore.as_retriever(search_kwargs={"k":3})
 
-#session store 만들어두기
+# ----------------------------
+# history를 저장할 session store 생성 (private)
+# ----------------------------
 _STORE: Dict[str, ChatMessageHistory] = {}
 # private 변수명 지정시 _ 를 붙임, : 타입 명시
 
 
 # ----------------------------
-# Session history store
+# Session history store에 저장
 # ----------------------------
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
     """history_aware를 추가하기 위해 sessionId의 history를 저장 | session 메모리에 적재"""
@@ -134,7 +152,6 @@ def get_answer_prompt():
             - 답변은 한국어를 사용하여 출력한다.
             - 근거 인용이 불가능하면 아래 문장만 출력한다: "해당 질문은 제공된 문서 범위에 포함되지 않습니다.
             문서 관련 질문을 입력해 주세요"
-            - [답변] 
 
             - [근거 인용]
             - (1~3문장 이내로 간단히 작성)
@@ -186,6 +203,9 @@ def get_rewrite_prompt() -> ChatPromptTemplate:
     return rewrite_prompt
 
 
+# ----------------------------
+# history 사용여부를 위해 지시어 포함 여부 확인 -> 지시어에 따라 ragchain 생성 분기
+# ----------------------------
 def check_deictic(query:str):
     """지시어 포함 체크 후 사용할 retriever를 확인"""
     deictic_yn = has_deictic_expression(query)
@@ -209,7 +229,7 @@ def get_init_rag_chain():
     parser = StrOutputParser() # ai_msg TO text
 
     #input : {"input": "", "chat_history" " [...]"}
-    #python dict로 만드는 건가
+    #전처리 매핑기
     pre = {
         "question": itemgetter("input"),
         "chat_history": RunnableLambda(lambda x: x.get("chat_history", [])),

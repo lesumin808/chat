@@ -1,0 +1,17 @@
+{
+  "docset_version": "2026.02.10",
+  "generated_at": "2026-02-10T11:04:30.136365",
+  "embedding": "intfloat/multilingual-e5-large-instruct",
+  "chunking": [
+    {
+      "chunk_size": 900,
+      "chunk_overlap": 200
+    }
+  ],
+  "files": [
+    {
+      "path": "edu_markdown.md",
+      "sha256": "416863c7385b6eb84f5b7b8be994479b39104d4327116161eed7f70eb8132036"
+    }
+  ]
+}
